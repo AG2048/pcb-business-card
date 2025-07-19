@@ -1,0 +1,13 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "f5d6cc43-9453-4464-9886-1f0b55143232")
+	(paper "A4")
+	(title_block
+		(title "LED Crossbar")
+		(date "2025-07-02")
+		(rev "0.1")
+	)
+	(lib_symbols)
+)

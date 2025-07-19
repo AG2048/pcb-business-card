@@ -1,0 +1,334 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "9e07d791-f667-419f-ba7a-964433e52615")
+	(paper "A4")
+	(title_block
+		(title "AG Business Card")
+		(date "2025-07-13")
+		(rev "0.1")
+	)
+	(lib_symbols)
+	(wire
+		(pts
+			(xy 145.415 65.405) (xy 151.13 65.405)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0a0eb347-4893-4bf0-bb80-6a3917d69f98")
+	)
+	(wire
+		(pts
+			(xy 138.43 56.515) (xy 151.13 56.515)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c8530a0-f4b1-4587-9476-1e3e42f72246")
+	)
+	(wire
+		(pts
+			(xy 133.985 146.685) (xy 148.59 146.685)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "58901bf6-b163-4e74-8ad6-cc78f59d7340")
+	)
+	(wire
+		(pts
+			(xy 145.415 136.525) (xy 145.415 65.405)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9e6d2858-4c14-41df-b552-9c24ce5441bc")
+	)
+	(wire
+		(pts
+			(xy 138.43 121.92) (xy 138.43 56.515)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ad3ffc94-6994-4bcd-88ec-2975752f821e")
+	)
+	(wire
+		(pts
+			(xy 148.59 73.025) (xy 151.13 73.025)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "af502dad-fbda-474a-8f34-90d3cdccd842")
+	)
+	(wire
+		(pts
+			(xy 148.59 146.685) (xy 148.59 73.025)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d4705e12-59dd-474d-9b02-9c37be2219d9")
+	)
+	(wire
+		(pts
+			(xy 133.985 121.92) (xy 138.43 121.92)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "df949153-b448-43c9-9529-7f86217118eb")
+	)
+	(wire
+		(pts
+			(xy 133.985 136.525) (xy 145.415 136.525)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ed9960d0-2167-425b-a311-85c17b6f5768")
+	)
+	(image
+		(at 243.205 128.905)
+		(uuid "58f5ce59-951a-470b-8e05-d16281cc3394")
+		(data "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"
+		)
+	)
+	(sheet
+		(at 151.13 48.895)
+		(size 46.99 45.085)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "15ece0e0-99ab-4152-be39-38b849bcd452")
+		(property "Sheetname" "NFC"
+			(at 151.13 48.1834 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "nfc.kicad_sch"
+			(at 151.13 94.5646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "NFC_SCL" input
+			(at 151.13 56.515 180)
+			(uuid "852b1b3a-ab5d-4d30-ade1-f9b9fdfffad6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NFC_SDA" input
+			(at 151.13 65.405 180)
+			(uuid "d5b43d35-351a-409f-8b99-06595f018c61")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "NFC_GPO" output
+			(at 151.13 73.025 180)
+			(uuid "d43c4133-55c9-4ea7-bb15-44e252e2faa6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "ag_business_card"
+				(path "/9e07d791-f667-419f-ba7a-964433e52615"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 30.48 111.76)
+		(size 103.505 62.23)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "35083751-8127-4c49-a360-4644eff79752")
+		(property "Sheetname" "Display"
+			(at 30.48 111.0484 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "display.kicad_sch"
+			(at 30.48 174.5746 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "I2C_SCL" output
+			(at 133.985 121.92 0)
+			(uuid "0bf30889-b021-4c53-ac7a-65fe4b860122")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "I2C_SDA" bidirectional
+			(at 133.985 136.525 0)
+			(uuid "e01822e4-b3c1-4fb0-829e-33f7a5c422c4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "I2C_GPO" input
+			(at 133.985 146.685 0)
+			(uuid "4208199d-bdcb-4e43-9230-9991c2cba79a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "ag_business_card"
+				(path "/9e07d791-f667-419f-ba7a-964433e52615"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 50.165 32.385)
+		(size 78.74 60.325)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "81864a4d-9b25-498d-bb7a-d0ad0d75c898")
+		(property "Sheetname" "Qi Charger"
+			(at 50.165 31.6734 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "qi_charger.kicad_sch"
+			(at 50.165 93.2946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ag_business_card"
+				(path "/9e07d791-f667-419f-ba7a-964433e52615"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

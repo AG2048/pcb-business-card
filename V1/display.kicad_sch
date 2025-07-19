@@ -1,0 +1,244 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "ec39be41-3d76-4f25-8efe-5e83db2ca131")
+	(paper "A4")
+	(title_block
+		(title "LED Display")
+		(date "2025-07-13")
+		(rev "0.1")
+	)
+	(lib_symbols)
+	(no_connect
+		(at 158.115 137.795)
+		(uuid "cb040032-5787-43ef-896b-dca98b46bd76")
+	)
+	(wire
+		(pts
+			(xy 125.095 123.19) (xy 167.64 123.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "290278c8-289f-4751-8ae7-ad02461b0643")
+	)
+	(wire
+		(pts
+			(xy 125.095 97.155) (xy 258.445 97.155)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "29b52351-ca9a-492d-9faf-bbb27eece261")
+	)
+	(wire
+		(pts
+			(xy 125.095 85.09) (xy 257.81 85.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "79f1774a-cd66-4af7-98fb-879bb725a824")
+	)
+	(wire
+		(pts
+			(xy 158.115 137.795) (xy 167.64 137.795)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9b31c425-14be-477d-94d6-8edb4768280d")
+	)
+	(wire
+		(pts
+			(xy 125.095 69.85) (xy 257.81 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fc97c00f-c68f-44fb-b00f-abec1a8cb0d5")
+	)
+	(hierarchical_label "I2C_GPO"
+		(shape input)
+		(at 258.445 97.155 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "0d356260-ce4a-4c6b-9ec7-6e38308d8206")
+	)
+	(hierarchical_label "I2C_SDA"
+		(shape bidirectional)
+		(at 257.81 85.09 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b26554cb-30df-4d70-9af6-5d880ffbf95d")
+	)
+	(hierarchical_label "I2C_SCL"
+		(shape output)
+		(at 257.81 69.85 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "eeee91fd-a2dc-423d-a1f8-ac0af403b9a6")
+	)
+	(sheet
+		(at 167.64 114.935)
+		(size 94.615 34.29)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "aacf72db-1e39-4b17-95e4-3edf4acb8461")
+		(property "Sheetname" "LED Array"
+			(at 167.64 114.2234 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "led_array.kicad_sch"
+			(at 167.64 149.8096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "DIN" input
+			(at 167.64 123.19 180)
+			(uuid "34644973-098b-4782-8c4d-a2faea9f96c4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(pin "DOUT" output
+			(at 167.64 137.795 180)
+			(uuid "e4a6f546-4bc3-4a4b-a2d2-f4c28c8d7e55")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(instances
+			(project "ag_business_card"
+				(path "/9e07d791-f667-419f-ba7a-964433e52615/35083751-8127-4c49-a360-4644eff79752"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 53.975 57.15)
+		(size 71.12 90.805)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "ef3b6426-247b-4e91-98ce-738d135abe87")
+		(property "Sheetname" "Processor"
+			(at 53.975 56.4384 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "processor.kicad_sch"
+			(at 53.975 148.5396 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(pin "MEM_SCL" output
+			(at 125.095 69.85 0)
+			(uuid "4ee25b44-2e2d-46d3-8d22-68e2a7324812")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "MEM_SDA" bidirectional
+			(at 125.095 85.09 0)
+			(uuid "7f7ec72a-1f21-4cde-917b-d987691cd77b")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "MEM_GPO" input
+			(at 125.095 97.155 0)
+			(uuid "5994f5f2-bcf6-4d28-a587-651df29a6766")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "LED" output
+			(at 125.095 123.19 0)
+			(uuid "5d0cdb3d-eaa7-4461-9c60-54581a0db1eb")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(instances
+			(project "ag_business_card"
+				(path "/9e07d791-f667-419f-ba7a-964433e52615/35083751-8127-4c49-a360-4644eff79752"
+					(page "5")
+				)
+			)
+		)
+	)
+)
