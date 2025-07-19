@@ -14,7 +14,7 @@ Latest Revision: V1 (2025)
 - Utilizes ST25DV64K NFC Tag to allow for wirelessly programming of the RGB LED Matrix Display, while also allowing users to tap the card on their phone to load my website [andygong.com](https://andygong.com).
 - The QR code on the back of the card can be scanned to load [andygong.com](https://andygong.com) as well.
 
-
+Manufactured by [JLCPCB](https://jlcpcb.com/).
 
 ### Images
 
