@@ -24,3 +24,5 @@ Manufactured and assembled by [JLCPCB](https://jlcpcb.com/).
 #### Manufactured Board
 ![V1 Manufactured Front](img/v1/v1_front_irl.jpg)
 ![V1 Manufactured Back](img/v1/v1_back_irl.jpg)
+#### Early Code Testing
+`img/v1/v1_early_test.mov` -- Demonstrates simple patterns on the RGB LED Matrix, with an "Among Us" pixel art pattern shown at the end, which is data sent to the NFC tag by phone, and read by the ATTiny84 using I2C. The code snapshot is [HERE](https://github.com/AG2048/pcb-business-card/commit/e9710af22d912196d3559052da2425deacd2d185)
