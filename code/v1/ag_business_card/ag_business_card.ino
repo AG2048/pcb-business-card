@@ -4,6 +4,8 @@
 #include <Wire.h>
 #include <tinyNeoPixel_Static.h>
 
+int i; // iteration variable
+
 // LED matrix configuration
 #define LED_PIN 10
 #define LED_ROWS 6
@@ -38,16 +40,40 @@ void leds_set_pixel_color(uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b)
 #define I2C_SDA 6
 #define I2C_SCL 4
 #define NFC_GPO 0
+uint8_t NFC_ADDRESS = 0b1010011;
+byte nfc_data[128]; // Buffer for NFC data
+byte nfc_address_upper_byte;
+byte nfc_address_lower_byte;
+bool nfc_read_data(int address, uint8_t length) {
+  Wire.beginTransmission(NFC_ADDRESS); // Open I2C session with a write operation
+  nfc_address_upper_byte = (address >> 8) & 0xFF; // Get upper byte of address
+  nfc_address_lower_byte = address & 0xFF; // Get lower byte of address
+  Wire.write(nfc_address_upper_byte); // Write upper address byte.
+  Wire.write(nfc_address_lower_byte); // Write lower address byte
+  if (Wire.endTransmission(false)) return false; // Do not release the bus, send RESTART condition. Return false if transmission failed (return value != 0)
+  
+  Wire.requestFrom(NFC_ADDRESS, length); // Request data from NFC tag in read mode
+  if (Wire.available() == length) {
+    for (i = 0; i < length; i++) {
+      nfc_data[i] = Wire.read(); // Read data into buffer
+    }
+    return true; // Data read successfully
+  }
+  return false; // Failed to read data
+}
 
 void setup() {
   // Configure LED pin to output, needs to be done manually for tinyNeoPixel_Static
   pinMode(LED_PIN, OUTPUT);
+
+  // Configure I2C for NFC
+  Wire.begin();
 }
 
 void loop() {
   // Display the pattern on the LED matrix
   // TODO: This is currently a placeholder pattern generation. This works like a "progress bar"
-  for (int i = 0; i < LED_COUNT * 3; i += 3) {
+  for (i = 0; i < LED_COUNT * 3; i += 3) {
     pixel_data[i] = MAX_BRIGHTNESS;     // Red
     pixel_data[i + 1] = 0;   // Green
     pixel_data[i + 2] = 0;   // Blue
@@ -56,12 +82,12 @@ void loop() {
   }
   delay(1000); // Wait before repeating the pattern
   // All off
-  for (int i = 0; i < LED_COUNT * 3; i++)
+  for (i = 0; i < LED_COUNT * 3; i++)
     pixel_data[i] = 0; // Turn off all LEDs
   leds.show(); // Update the LED matrix to turn off all LEDs
   delay(1000); // Wait before starting again
   // Cycle every LED from GRB
-  for (int i = 0; i < LED_COUNT * 3; i++) {
+  for (i = 0; i < LED_COUNT * 3; i++) {
     pixel_data[i] = MAX_BRIGHTNESS;
     leds.show(); // Update the LED matrix
     delay(100); // Delay for visibility
@@ -69,13 +95,13 @@ void loop() {
   }
   delay(1000); // Wait before repeating the cycle
   // All on, to test full brightness power
-  for (int i = 0; i < LED_COUNT * 3; i++) {
+  for (i = 0; i < LED_COUNT * 3; i++) {
     pixel_data[i] = MAX_BRIGHTNESS; // Set all LEDs to full brightness
   }
   leds.show(); // Update the LED matrix
   delay(1000); // Keep all LEDs on for visibility
   // All on but colours cycling
-  for (int i = 0; i < LED_COUNT; i++) {
+  for (i = 0; i < LED_COUNT; i++) {
     pixel_data[i*3] = (i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) & 63; // Red
     pixel_data[i*3 + 1] = ((i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) >> 6) & 63; // Green
     pixel_data[i*3 + 2] = ((i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) >> 12) & 63; // Blue
@@ -85,7 +111,7 @@ void loop() {
   // Make "AG" pattern
   leds_clear_matrix();
   // Set "A"
-  for (int i = 0; i < 5; i++) {
+  for (i = 0; i < 5; i++) {
     leds_set_pixel_color(0, i, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
     leds_set_pixel_color(1, i, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
     leds_set_pixel_color(4, i, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
@@ -98,16 +124,16 @@ void loop() {
   leds_set_pixel_color(3, 5, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
   leds_set_pixel_color(4, 5, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
   // Set "G"
-  for (int i = 1; i < 5; i++) {
+  for (i = 1; i < 5; i++) {
     leds_set_pixel_color(6, i, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
   }
-  for (int i = 0; i < 6; i++) {
+  for (i = 0; i < 6; i++) {
     leds_set_pixel_color(7, i, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
   }
-  for (int i = 2; i < 5; i++) {
+  for (i = 2; i < 5; i++) {
     leds_set_pixel_color(i+6, 5, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
   }
-  for (int i = 2; i < 6; i++) {
+  for (i = 2; i < 6; i++) {
     leds_set_pixel_color(i+6, 0, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
   }
   leds_set_pixel_color(4+6, 1, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS);
@@ -121,4 +147,18 @@ void loop() {
   leds.show();
   delay(5000); // Keep the "AG" pattern for visibility
   leds_clear_matrix();
+
+  // Read NFC data and display it (1 is light, 0 is dark)
+  nfc_read_data(32, 9); // Read 9 bytes from NFC tag starting at address 32 (for 72 bits)
+  for (i = 0; i < 72; i++) {
+    if (nfc_data[i / 8] & (1 << (7 - (i % 8)))) { // Check if the bit is set
+      leds_set_pixel_color(i % LED_COLS, i / LED_COLS, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS); // Set pixel to white
+    } else {
+      leds_set_pixel_color(i % LED_COLS, i / LED_COLS, 0, 0, 0); // Set pixel to off
+    }
+  }
+  leds.show(); // Update the LED matrix to display the NFC data
+  delay(10000); // Keep the NFC data display for visibility
+  leds_clear_matrix(); // Clear the matrix after displaying NFC data
+  delay(1000); // Wait before starting the loop again
 }
