@@ -11,7 +11,9 @@ This directory contains the code for the AG Business Card V1. This code is to be
 ## Pins
 The pinout for ATTiny84 can be found in the [ATTinyCore documentation](https://github.com/SpenceKonde/ATTinyCore/blob/v2.0.0-devThis-is-the-head-submit-PRs-against-this/avr/extras/ATtiny_x4.md). 
 
-The most relevant pin is the LED pin, defined as `LED_PIN` in the code, which is connected to pin 10 of the ATTiny84. This pin is used to control the RGB LED matrix.
+The most relevant pin is the LED pin, defined as `LED_PIN` in the code, which is connected to pin 10 of the ATTiny84. This pin is used to control the RGB LED matrix. 
+
+When using the `tinyNeoPixel_Static` library, I configured the bootloader to use PORT B (which is where pin 10 is located). 
 
 The I2C pins uses the standard SDA and SCL pins, so `Wire.begin()` will automatically use the correct pins.
 
