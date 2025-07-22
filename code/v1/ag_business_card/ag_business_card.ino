@@ -40,19 +40,19 @@ void leds_set_pixel_color(uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b)
 #define I2C_SDA 6
 #define I2C_SCL 4
 #define NFC_GPO 0
-uint8_t NFC_ADDRESS = 0b1010011;
+uint8_t NFC_I2C_ADDRESS = 0b1010011;
 byte nfc_data[128]; // Buffer for NFC data
 byte nfc_address_upper_byte;
 byte nfc_address_lower_byte;
 bool nfc_read_data(int address, uint8_t length) {
-  Wire.beginTransmission(NFC_ADDRESS); // Open I2C session with a write operation
+  Wire.beginTransmission(NFC_I2C_ADDRESS); // Open I2C session with a write operation
   nfc_address_upper_byte = (address >> 8) & 0xFF; // Get upper byte of address
   nfc_address_lower_byte = address & 0xFF; // Get lower byte of address
   Wire.write(nfc_address_upper_byte); // Write upper address byte.
   Wire.write(nfc_address_lower_byte); // Write lower address byte
   if (Wire.endTransmission(false)) return false; // Do not release the bus, send RESTART condition. Return false if transmission failed (return value != 0)
-  
-  Wire.requestFrom(NFC_ADDRESS, length); // Request data from NFC tag in read mode
+
+  Wire.requestFrom(NFC_I2C_ADDRESS, length); // Request data from NFC tag in read mode
   if (Wire.available() == length) {
     for (i = 0; i < length; i++) {
       nfc_data[i] = Wire.read(); // Read data into buffer
@@ -78,7 +78,7 @@ void loop() {
     pixel_data[i + 1] = 0;   // Green
     pixel_data[i + 2] = 0;   // Blue
     leds.show(); // Update the LED matrix
-    delay(100); // Delay for visibility
+    delay(10); // Delay for visibility
   }
   delay(1000); // Wait before repeating the pattern
   // All off
@@ -151,7 +151,7 @@ void loop() {
   // Read NFC data and display it (1 is light, 0 is dark)
   nfc_read_data(32, 9); // Read 9 bytes from NFC tag starting at address 32 (for 72 bits)
   for (i = 0; i < 72; i++) {
-    if (nfc_data[i / 8] & (1 << (7 - (i % 8)))) { // Check if the bit is set
+    if (nfc_data[i / 8] & (1 << (7 - (i % 8)))) { // Check if the bit is set (MSB of a byte first)
       leds_set_pixel_color(i % LED_COLS, i / LED_COLS, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS); // Set pixel to white
     } else {
       leds_set_pixel_color(i % LED_COLS, i / LED_COLS, 0, 0, 0); // Set pixel to off
