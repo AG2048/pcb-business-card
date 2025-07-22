@@ -7,6 +7,7 @@
 // LED matrix configuration
 #define LED_PIN 10
 #define LED_COUNT 72
+#define MAX_BRIGHTNESS 63 // 255 is too bright, and power cannot support 72 LEDs at full brightness in white
 byte pixel_data[LED_COUNT * 3];
 tinyNeoPixel leds = tinyNeoPixel(LED_COUNT, LED_PIN, NEO_GRB, pixel_data);
 
@@ -24,7 +25,7 @@ void loop() {
   // Display the pattern on the LED matrix
   // TODO: This is currently a placeholder pattern generation. This works like a "progress bar"
   for (int i = 0; i < LED_COUNT * 3; i += 3) {
-    pixel_data[i] = 255;     // Red
+    pixel_data[i] = MAX_BRIGHTNESS;     // Red
     pixel_data[i + 1] = 0;   // Green
     pixel_data[i + 2] = 0;   // Blue
     leds.show(); // Update the LED matrix
@@ -38,7 +39,7 @@ void loop() {
   delay(1000); // Wait before starting again
   // Cycle every LED from GRB
   for (int i = 0; i < LED_COUNT * 3; i++) {
-    pixel_data[i] = 255;
+    pixel_data[i] = MAX_BRIGHTNESS;
     leds.show(); // Update the LED matrix
     delay(100); // Delay for visibility
     pixel_data[i] = 0; // Turn off the LED after showing it
@@ -46,8 +47,16 @@ void loop() {
   delay(1000); // Wait before repeating the cycle
   // All on, to test full brightness power
   for (int i = 0; i < LED_COUNT * 3; i++) {
-    pixel_data[i] = 255; // Set all LEDs to full brightness
+    pixel_data[i] = MAX_BRIGHTNESS; // Set all LEDs to full brightness
   }
   leds.show(); // Update the LED matrix
   delay(1000); // Keep all LEDs on for visibility
+  // All on but colours cycling
+  for (int i = 0; i < LED_COUNT; i++) {
+    pixel_data[i*3] = (i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) & 63; // Red
+    pixel_data[i*3 + 1] = ((i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) >> 6) & 63; // Green
+    pixel_data[i*3 + 2] = ((i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) >> 12) & 63; // Blue
+  }
+  leds.show(); // Update the LED matrix
+  delay(10000); // Keep the cycling colours for visibility
 }
