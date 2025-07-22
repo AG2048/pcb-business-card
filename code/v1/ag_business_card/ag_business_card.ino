@@ -11,7 +11,7 @@ int i; // iteration variable
 #define LED_ROWS 6
 #define LED_COLS 12
 #define LED_COUNT (LED_ROWS * LED_COLS)
-#define MAX_BRIGHTNESS 63 // 255 is too bright, and power cannot support 72 LEDs at full brightness in white
+#define MAX_BRIGHTNESS 15 // 255 is too bright, and power cannot support 72 LEDs at full brightness in white
 byte pixel_data[LED_COUNT * 3];
 tinyNeoPixel leds = tinyNeoPixel(LED_COUNT, LED_PIN, NEO_GRB, pixel_data);
 
@@ -102,9 +102,9 @@ void loop() {
   delay(1000); // Keep all LEDs on for visibility
   // All on but colours cycling
   for (i = 0; i < LED_COUNT; i++) {
-    pixel_data[i*3] = (i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) & 63; // Red
-    pixel_data[i*3 + 1] = ((i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) >> 6) & 63; // Green
-    pixel_data[i*3 + 2] = ((i * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) * (MAX_BRIGHTNESS+1) / LED_COUNT) >> 12) & 63; // Blue
+    pixel_data[i*3] = (i * 46) & 15; // Red
+    pixel_data[i*3 + 1] = ((i * 46) >> 4) & 15; // Green
+    pixel_data[i*3 + 2] = ((i * 46) >> 8) & 15; // Blue
   }
   leds.show(); // Update the LED matrix
   delay(10000); // Keep the cycling colours for visibility
