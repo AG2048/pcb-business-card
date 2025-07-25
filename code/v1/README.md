@@ -37,6 +37,10 @@ A custom leds_set_pixel_color function is used to set the pixel color in the `pi
 ## NFC I2C
 The ST25DV64K NFC tag is used to store the display patterns for the RGB LED matrix. The NFC tag is accessed using the I2C protocol, and the `Wire` library is used to communicate with the NFC tag.
 
+Currently it is assumed that the NFC tag does not have password protection enabled for wired I2C access.
+
+The ATTiny84 will wait for 500 ms at the start of the program to allow the NFC tag to power up and be ready for communication. This is done using `delay(500)`.
+
 To read the NFC tag, the `nfc_read_data` function is used. This function reads a specified number of bytes from the NFC tag starting at a specified address. The data is stored in the `nfc_data` buffer array.
 
 Inside `nfc_read_data`, we first use `Wire.beginTransmission(NFC_I2C_ADDRESS)` to begin a `WRITE` operation to the NFC tag, where we write the 2-byte address we wish to read from (upper byte first). According to the ST25DV64K datasheet, we need to send a `RESTART` condition and switch to a `READ` operation to read the data from memory. This was done using `Wire.endTransmission(false)` to keep the I2C bus open, and then using `Wire.requestFrom(NFC_I2C_ADDRESS, length)` to read the data from the NFC tag.
