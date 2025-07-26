@@ -55,11 +55,32 @@ After reading the blog, I went to the WPC (Wireless Power Consortium) website to
 (More details in the Qi and NFC Test Board section)
 
 ### NFC Tag
-Inspired by existing PCB business cards. 
+- Initially I wanted to drive the LEDs using the microcontroller itself, with shift registers to read signals from the microprocessor's limited pins, and do a "row by row" scan of the LED matrix to basically display the whole matrix with a 1/N duty cycle.  
+- To use the limited pins on microprocessors, I thought about using an 8-bit data output EEPROM that can read an address stored on shift register, and display corresponding "column pattern" when the corresponding row is turned on. 
+- Through my search, I found EEPROMs that uses I2C to read / write data. This is not very ideal with my initial design, since it would require multiple cycles to let the module output data, and the data is shown through the I2C bus instead of the parallel bus I was looking for. But this gave me an idea to use such EEPROM to temporarily load patterns onto the chip memory, and "shift" the data out to the LED matrix in a "longer" shift register chain that handles both rows and columns. 
+- At this point, I had planned 2 pins for Shift register control and 2 for I2C. But clearly the initial ATTiny10 idea doesn't have enough pins for this. Had to compromise by also shifting the I2C "clock" signal through shift registers, only leaving the SDA pin as an IO pin directly to the processor... Clearly, this isn't a great solution...
+- While looking for inspirations from existing PCB business cards, I found that a lot of cards have NFC tags that can display their websites when tapped by a phone. I then realized through some search of existing NFC tag chips that a lot of such NFC tags have large user memory areas that can double as a data storage EEPROM for the LED matrix. Better yet, they are also I2C compatible. 
+- Another benefit on top of that is that these NFC tags can be written to by a phone. So in this case, as long as the microcontroller's program can read the NFC tag's user memory, I can remotely update any display patterns on the card. This would be a great addition to the card, since not only it is "cool" (as in it's wireless), it is also very convenient and practical, since if I had used a regular EEPROM, any pattern change would require some wired re-programming of the EEPROM. But now I can just tap my phone on it with the images (although it has to be formatted correctly) and everything is done. 
+
+- Go into coil design -- the NFC tag has a standard built-in capacitance. Therefore only the inductor coil needs to be designed. However, I'm personally worried about the coil being next to wireless power (the Qi charger). So according to ST's recommendations, I added a seires 1nF capacitor to act as a high-pass filter to block the 100kHz Qi signal, while allowing the NFC tag's 13.56 MHz signal to pass through.
+- Also from some development recommendations, I made the coils' inductances SLIGHTLY smaller than what's needed -- so it can be compendated by adding parallel capacitors to tune the resonant frequency -- while reducing the capacitance may need more work. 
 
 ### Processor
+- Was previously working with ATTiny10 on some other projects
+- Realized ATTinys are pretty good processors for small projects. 
+- Initially considered ATTiny10, but it doesn't have enough RAM and pins for an initial shift register type LED matrix. 
+- Thought about ATTiny20, but there's not a lot of support / resources online for programming / programmer...
+- Switched to the more popular ATTiny84. It has enough pins (enough to support my initial shifting register LED matrix design). It has enough memory (512 B is a lot for my application -- at least when every pixel is just 1 bit). 
 
 ### LED Matrix
+- Hoped for a 8x16 matrix, arranged like the Arduino Uno R4 matrix.
+- Alluded to before, thought of a matrix similar to that of Arduino Uno R4. I don't want to deal with charlieplexing. So I thought about a row by row scanning...
+- Found some TI shift registers (open drain and push-pull / 3 state...) that can be used. 
+- However, after finding some existing PCB business card with LED matrix, I realized that I could just use a small 1mm x 1mm addressable RGB LED matrix. (I initially thought about addressible LEDs, but my early searches all ended up with those LARGE LEDs, so I kinda gave up too early on that)
+- Since in this case, I would like JLC to handle the PCB assembly. I found the closest one on their website with is a 1.5mm x 1.5mm LED, which is unfortunate that I can only fit 6x12 of those on the PCB. Additionally, those LEDs only need 1 pin to drive. 
+- I was initially scared by their recommendations on the datasheet that EVERY LED should have its own capacitor between VCC and GND (not enough space...)... But later I realized it's probably fine as long as the power is stable / there's enough capacitors close enough between multiple LEDs.
+- In V2 board, I found some alternative 1mm x 1mm LEDs that are also cheaper. So hopefully I can fit an 8x16 matrix on the V2 board. Honestly 8x12 also looks fine.
+- Was worried about power consumptions. But from V1 board tests, full brightness is TOO bright, so running only at 1/16 brightness. (The power can barely support 72 LEDs' at full brightness, but 1/16 brightness is definitely fine... So I think expanding to 8x16 is ok on the power side.)
 
 ## Qi and NFC Test Board
 
