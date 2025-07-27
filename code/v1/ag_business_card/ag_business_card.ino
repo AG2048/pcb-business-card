@@ -183,6 +183,8 @@ bool initialize() {
   Returns true if initialization was successful, false otherwise.
   */
 
+  current_nfc_address = NFC_FIRST_ADDRESS;
+
   leds_clear_matrix(); // Clear the LED matrix before starting
 
   delay(500); // Wait for NFC tag to power up
