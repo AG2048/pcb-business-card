@@ -110,17 +110,6 @@ void leds_fill_solid_red() {
   leds_show(); // Update the LED matrix to reflect the changes
 }
 
-void leds_copy_from_buffer(byte *buffer) {
-  /*
-  This function copies the pixel data from the provided buffer to the pixel_data array.
-  The buffer should be in the same format as pixel_data (GRB444).
-  Always copy to pixel_data array.
-  */
-  for (pixel_index = 0; pixel_index < PIXEL_ARRAY_SIZE; pixel_index++) {
-    pixel_data[pixel_index] = buffer[pixel_index]; // Copy each byte from the buffer to pixel_data
-  }
-}
-
 // #################################################################################################################
 // #                                             NFC FUNCTIONS                                                     #
 // #################################################################################################################
@@ -324,24 +313,95 @@ bool display_frame_solid_color() {
 }
 
 byte original_pixel_data[PIXEL_ARRAY_SIZE]; // Buffer to store the original pixel data for transition handling
+unsigned long elapsed;
+int8_t transition_r, transition_g, transition_b; // Variables to store the transition values for each channel
 bool handle_transition() {
   /*
   This function handles the transition between frames.
   It updates the pixel data based on the transition_time and the difference between the current frame in pixel_data and the next frame in nfc_data.
   Returns true if the transition was handled successfully, false otherwise.
   */
-  // We can make a 3rd buffer array to store the original frame's data. Then every 16 ms, we calculate what the next pixel data should be. In the end, we copy the pixel_data to the nfc_data buffer.
-  for (pixel_index = 0; pixel_index < PIXEL_ARRAY_SIZE; pixel_index++) {
-    original_pixel_data[pixel_index] = pixel_data[pixel_index]; // Copy the current pixel data to the original_pixel_data buffer
+  // If transition time is 0, directly memcpy and return true
+  if (transition_time == 0) {
+    memcpy(pixel_data, nfc_data, PIXEL_ARRAY_SIZE);
+    return true;
   }
 
+  // We can make a 3rd buffer array to store the original frame's data. Then every 16 ms, we calculate what the next pixel data should be. In the end, we copy the pixel_data to the nfc_data buffer.
+  // memcpy the pixel_data to original_pixel_data
+  memcpy(original_pixel_data, pixel_data, PIXEL_ARRAY_SIZE);
   start_time = millis(); // Reset the frame start time
 
-  // TODO: Implement the transition logic
+  // Repeat until transition_time is reached
+  elapsed = (unsigned long)(millis() - start_time); // Calculate elapsed time since the start of the frame
+  while (elapsed < transition_time) {
+    // For each pixel channel, calculate the pixel value to be displayed based on original + difference * elapsed / transition_time (all rounded down to nearest 4-bit value)
+    // If value calculated somehow is beyond 15 or less than 0, set to boundary. 
+    for (pixel_index = 0; pixel_index < PIXEL_ARRAY_SIZE; pixel_index += 3) {
+      // The for loop processes 2 pixels at a time, since 2 pixels spans 3 bytes.
 
+      // Calculate difference
+      transition_g = (int8_t)(((nfc_data[pixel_index] >> 4) & 0x0F) - ((original_pixel_data[pixel_index] >> 4) & 0x0F)); // Calculate the difference for G channel
+      transition_r = (int8_t)((nfc_data[pixel_index] & 0x0F) - (original_pixel_data[pixel_index] & 0x0F)); // Calculate the difference for R channel
+      transition_b = (int8_t)(((nfc_data[pixel_index + 1] >> 4) & 0x0F) - ((original_pixel_data[pixel_index + 1] >> 4) & 0x0F)); // Calculate the difference for B channel
+
+      // Calculate new value how much to change from original pixel data
+      transition_g = (int8_t)((int32_t)transition_g * elapsed / transition_time);
+      transition_r = (int8_t)((int32_t)transition_r * elapsed / transition_time);
+      transition_b = (int8_t)((int32_t)transition_b * elapsed / transition_time);
+
+      // Add transition values to the original pixel data
+      transition_g = (int8_t)(((original_pixel_data[pixel_index] >> 4) & 0x0F) + transition_g); // Update G channel
+      transition_r = (int8_t)((original_pixel_data[pixel_index] & 0x0F) + transition_r); // Update R channel
+      transition_b = (int8_t)(((original_pixel_data[pixel_index + 1] >> 4) & 0x0F) + transition_b); // Update B channel
+
+      // Clamp the values to the range 0-15 (4-bit value)
+      transition_g = constrain(transition_g, 0, 15);
+      transition_r = constrain(transition_r, 0, 15);
+      transition_b = constrain(transition_b, 0, 15);
+
+      // Set the pixel data with the new values
+      pixel_data[pixel_index] = ((transition_g << 4) & 0xF0) | (transition_r & 0x0F); // Set the G and R channels in the first byte
+      pixel_data[pixel_index + 1] = (transition_b << 4) & 0xF0; // Currently ignore the G channel of next pixel. It will be | set.
+
+      // Process 2nd pixel in the 3-byte group
+      transition_g = (int8_t)((nfc_data[pixel_index + 1] & 0x0F) - (original_pixel_data[pixel_index + 1] & 0x0F)); // Calculate the difference for G channel
+      transition_r = (int8_t)(((nfc_data[pixel_index + 2] >> 4) & 0x0F) - ((original_pixel_data[pixel_index + 2] >> 4) & 0x0F)); // Calculate the difference for R channel
+      transition_b = (int8_t)((nfc_data[pixel_index + 2] & 0x0F) - (original_pixel_data[pixel_index + 2] & 0x0F)); // Calculate the difference for B channel
+
+      // Calculate new value how much to change from original pixel data
+      transition_g = (int8_t)((int32_t)transition_g * elapsed / transition_time);
+      transition_r = (int8_t)((int32_t)transition_r * elapsed / transition_time);
+      transition_b = (int8_t)((int32_t)transition_b * elapsed / transition_time);
+
+      // Add transition values to the original pixel data
+      transition_g = (int8_t)((original_pixel_data[pixel_index + 1] & 0x0F) + transition_g); // Update G channel
+      transition_r = (int8_t)(((original_pixel_data[pixel_index + 2] >> 4) & 0x0F) + transition_r); // Update R channel
+      transition_b = (int8_t)((original_pixel_data[pixel_index + 2] & 0x0F) + transition_b); // Update B channel
+
+      // Clamp the values to the range 0-15 (4-bit value)
+      transition_g = constrain(transition_g, 0, 15);
+      transition_r = constrain(transition_r, 0, 15);
+      transition_b = constrain(transition_b, 0, 15);
+
+      // Set the pixel data with the new values
+      pixel_data[pixel_index + 1] |= (transition_g & 0x0F); // Set the G channel in the second byte
+      pixel_data[pixel_index + 2] = ((transition_r << 4) & 0xF0) | (transition_b & 0x0F); // Set the R and B channels in the third byte
+    }
+
+    leds_show(); // Show the updated pixel data on the LED matrix
+
+    // Wait for 60FPS (~16ms) before updating the next frame
+    delay(16); // Delay for 16 milliseconds to achieve ~60 FPS
+
+    // End of loop, update time
+    current_time = millis(); // Get the current time
+    elapsed = (unsigned long)(current_time - start_time); // Calculate elapsed time since the start of the frame
+  }
+  
   // In the end, always copy from nfc_data to pixel_data to ensure the frame is correctly displayed
-  leds_copy_from_buffer(nfc_data); // Copy the pixel data from nfc_data to pixel_data
-  leds_show(); // Show the initial frame
+  memcpy(pixel_data, nfc_data, PIXEL_ARRAY_SIZE);
+  leds_show(); // Show the final frame
   return true;
 }
 
