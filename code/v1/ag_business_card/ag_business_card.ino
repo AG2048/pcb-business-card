@@ -1,8 +1,8 @@
 // AG Business Card 2025 V1 Processing Code
 // This code reads the ST25DV64K NFC tag for display patterns, and displays them on the 6x12 RGB LED matrix. 
 
+#include <Arduino.h>
 #include <Wire.h>
-#include <tinyNeoPixel_Static.h>
 
 // #################################################################################################################
 // #                                      GLOBAL VARIABLES                                                         #
@@ -33,12 +33,182 @@
 #define NUM_PIXELS_IN_BYTES (LED_COUNT / 8) // Number of pixels, represented in bytes. For single_colour display mode
 byte pixel_data[PIXEL_ARRAY_SIZE]; // GRB444 data format, 1.5 bytes per pixel (4 bits per channel, 3 channels per pixel, 12 bits per pixel)
 
+// Variables for LED display (from the tinyNeoPixel_Static library)
+uint32_t endTime = 0;
+int8_t pin = LED_PIN;
+uint8_t p = LED_PIN;
+volatile uint8_t *port;
+uint8_t pinMask;
 void leds_show() {
   /*
   This function sends the pixel_data stored into the RGB LED matrix.
   This function is similar to the `show()` function in the tinyNeoPixel library, but uses the static pixel_data array that only stores the lower 4 bits of each channel (upper bits are always 0).
   */
-  //TODO
+  while(!((micros() - endTime) >= 50L));
+
+  // Initialize port and pinMask if not already done
+  if (!port) {
+    port = portOutputRegister(digitalPinToPort(p));
+    pinMask = digitalPinToBitMask(p);
+  }
+
+  noInterrupts(); // Disable interrupts to ensure atomic operation
+
+  volatile uint16_t i = PIXEL_ARRAY_SIZE; // Start count from number of bytes in the pixel_data array
+  volatile uint8_t 
+    *ptr = pixel_data, // Pointer to the pixel_data array
+    b = *ptr++, // Read the first byte from the pixel_data array
+    hi, lo; // PORT with output bit set high/low
+
+  volatile uint8_t n1, n2 = 0; // next bits out
+  hi = (*port) | pinMask;
+  lo = (*port) & ~pinMask; // Set the port to high and low states
+  n1 = lo; // Assume first it out is 0
+  if (b & 0x80) n1 = hi; // If first bit is 1, n1 = hi
+
+  // Assembly to write the pixel data.
+  // TODO: This assembly code doesn't work -- due to too many lines for the last branch. Should cut it down. Reference how the library handles 16MHz clock speed (having a bit counter and shift the data)
+  asm volatile(
+   "headD:"                   "\n\t" // Clk  Pseudocode
+    // Bit 7 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 6 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 5 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 4 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 7: 1.25 us                // on target
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n1]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n2]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 6"        "\n\t" // 1-2 T = 6   if(b & 0x40)
+     "mov %[n2]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 6: 1.25 us                // on target
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n2]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n1]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 5"        "\n\t" // 1-2 T = 6   if(b & 0x20)
+     "mov %[n1]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 5: 1.25 us                // on target
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n1]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n2]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 4"        "\n\t" // 1-2 T = 6   if(b & 0x10)
+     "mov %[n2]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 4: 1.25 us                // on target
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n2]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n1]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 3"        "\n\t" // 1-2 T = 6   if(b & 0x08)
+     "mov %[n1]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 7 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 6 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 5 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 4 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "nop"                     "\n\t" // 1   T = 5   nop
+    "nop"                     "\n\t" // 1   T = 6   nop
+    "nop"                     "\n\t" // 1   T = 7   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "nop"                     "\n\t" // 1   T = 10  nop
+    // Bit 3: 1.25 us                // on target
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n1]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n2]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 2"        "\n\t" // 1-2 T = 6   if(b & 0x04)
+     "mov %[n2]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "subi %A[count], 1"       "\n\t" // 1   T = 10  i-- part 1
+    // Bit 2: 1.25 us                // on target
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n2]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n1]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 1"        "\n\t" // 1-2 T = 6   if(b & 0x02)
+     "mov %[n1]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "sbci %B[count], 0"       "\n\t" // 1   T = 10  i-- part 2 - carrying clears 0 flag unless this is also 0. (don't act on Z flag yet)
+    // Bit 1: 1.375 us               // 1 clock over
+    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st  %a[port] , %[n1]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n2]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 0"        "\n\t" // 1-2 T = 6   if(b & 0x01)
+     "mov %[n2]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
+    "ld   %[byte] , %a[ptr]+" "\n\t" // 2   T = 11  b = *ptr++ load next byte
+    // Bit 0: 1.375 us               // 1 clock over
+    "st   %a[port] , %[hi]"   "\n\t" // 2   T = 2   PORT = hi   0 and 2
+    "st   %a[port] , %[n2]"   "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
+    "mov  %[n1]   , %[lo]"    "\n\t" // 1   T = 5   n2   = lo -
+    "sbrc %[byte] , 7"        "\n\t" // 1-2 T = 6   if(b & 0x80)
+     "mov %[n1]   , %[hi]"    "\n\t" // 0-1 T = 7   n1 = hi
+    "st   %a[port] , %[lo]"   "\n\t" // 2   T = 9   PORT = lo
+    "brne headD"              "\n"   // 2   T = 11  while(i) (Z flag set above)
+  : [byte]  "+r" (b),
+    [n1]    "+r" (n1),
+    [n2]    "+r" (n2),
+    [count] "+d" (i),
+    [ptr]   "+e" (ptr)
+  : [port]   "e" (port),
+    [hi]     "r" (hi),
+    [lo]     "r" (lo));
+
+  interrupts(); // Re-enable interrupts after the atomic operation
+  endTime = micros();
 }
 
 // LED Utility Functions
