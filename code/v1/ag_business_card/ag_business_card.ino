@@ -59,6 +59,7 @@ void leds_show() {
     *ptr = pixel_data, // Pointer to the pixel_data array
     b = *ptr++, // Read the first byte from the pixel_data array
     hi, lo; // PORT with output bit set high/low
+  volatile uint8_t bit = 4; // Bit counter, starting from 4 (4 bits to write)
 
   volatile uint8_t n1, n2 = 0; // next bits out
   hi = (*port) | pinMask;
@@ -67,41 +68,14 @@ void leds_show() {
   if (b & 0x80) n1 = hi; // If first bit is 1, n1 = hi
 
   // Assembly to write the pixel data.
-  // TODO: This assembly code doesn't work -- due to too many lines for the last branch. Should cut it down. Reference how the library handles 16MHz clock speed (having a bit counter and shift the data)
+  // This code is structured as: HIGH, ZERO2LOW, ZERO2HIGH, LOW.
+  // The order of execution is: ZERO2HIGH -> HIGH -> ZERO2LOW -> LOW -> ZERO2HIGH. 
+  // This is to always write zeros in front of any 4 bits, and to allow the assembly size to fit within the rjmp instruction limit.
   asm volatile(
-   "headD:"                   "\n\t" // Clk  Pseudocode
-    // Bit 7 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
-    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
-    "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 6 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
-    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
-    "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 5 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
-    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
-    "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 4 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
-    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
-    "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
+    "headD:"                  "\n\t" // Clk  Pseudocode
+    "rjmp headzero2high"      "\n\t" // Jump to zero to high code as initialization
+    // Write the upper 4 bits of a byte
+    "headhigh4bits:"          "\n\t"
     // Bit 7: 1.25 us                // on target
     "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
     "st  %a[port] , %[n1]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
@@ -134,38 +108,34 @@ void leds_show() {
      "mov %[n1]   , %[hi]"    "\n\t" // 0-1 T = 7   n2 = hi
     "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
     "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 7 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    // Write 4 zeros and jump to write lower 4 bits of the byte -- direct transition from writing upper 4 bits
+    "headzero2low:"           "\n\t"
+    // Zero Bit: 1.25 us             // on target
     "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = lo - 250 ns zero
+    "dec  %[bit]"             "\n\t" // 1   T = 5   bit--
+    "breq zero2lowdone"       "\n\t" // 1-2 T = 6   Branch if bit == 0 (Z flag set)
     "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 6 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
+    "nop"                     "\n\t" // 1   T = 8   nop
+    "rjmp headzero2low"       "\n\t" // 2   T = 10  Jump back to write zeros if bit is not zero
+    "zero2lowdone:"           "\n\t" //     T = 7   Label for zero to low done
+    "ldi  %[bit], 4"          "\n\t" // 1   T = 8   Reset bit counter to 4
+    "rjmp headlow4bits"       "\n\t" // 2   T = 10  Jump to write lower 4 bits of the byte
+    // Write 4 zeros and jump to write upper 4 bits of the byte
+    "headzero2high:"          "\n\t"
+    // Zero Bit: 1.25 us             // on target
     "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
+    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = lo - 250 ns zero
+    "dec  %[bit]"             "\n\t" // 1   T = 5   bit--
+    "breq zero2highdone"      "\n\t" // 1-2 T = 6   Branch if bit == 0 (Z flag set)
     "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 5 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
-    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
-    "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
-    // Bit 4 of written data, write 0: 1.25 us                // on target    ----    Write 0 for first 4 bits
-    "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
-    "nop"                     "\n\t" // 1   T = 5   nop
-    "nop"                     "\n\t" // 1   T = 6   nop
-    "nop"                     "\n\t" // 1   T = 7   nop
-    "st  %a[port] , %[lo]"    "\n\t" // 2   T = 9   PORT = lo
-    "nop"                     "\n\t" // 1   T = 10  nop
+    "nop"                     "\n\t" // 1   T = 8   nop
+    "rjmp headzero2high"      "\n\t" // 2   T = 10  Jump back to write zeros if bit is not zero
+    "zero2highdone:"          "\n\t" //     T = 7   Label for zero to high done
+    "ldi  %[bit], 4"          "\n\t" // 1   T = 8   Reset bit counter to 4
+    "rjmp headhigh4bits"      "\n\t" // 2   T = 10  Jump to write higher 4 bits of the byte
+    // Write the lower 4 bits of a byte
+    "headlow4bits:"           "\n\t"
     // Bit 3: 1.25 us                // on target
     "st  %a[port] , %[hi]"    "\n\t" // 2   T = 2   PORT = hi   0 and 2
     "st  %a[port] , %[n1]"    "\n\t" // 2   T = 4   PORT = n1 - 250 ns zero
@@ -197,12 +167,13 @@ void leds_show() {
     "sbrc %[byte] , 7"        "\n\t" // 1-2 T = 6   if(b & 0x80)
      "mov %[n1]   , %[hi]"    "\n\t" // 0-1 T = 7   n1 = hi
     "st   %a[port] , %[lo]"   "\n\t" // 2   T = 9   PORT = lo
-    "brne headD"              "\n"   // 2   T = 11  while(i) (Z flag set above)
+    "brne headzero2high"      "\n"   // 2   T = 11  while(i) (Z flag set above)
   : [byte]  "+r" (b),
     [n1]    "+r" (n1),
     [n2]    "+r" (n2),
     [count] "+d" (i),
-    [ptr]   "+e" (ptr)
+    [ptr]   "+e" (ptr),
+    [bit]   "+r" (bit)
   : [port]   "e" (port),
     [hi]     "r" (hi),
     [lo]     "r" (lo));
@@ -322,6 +293,22 @@ bool nfc_read_data(int address, int length) {
 // #                                             UTIL FUNCTIONS                                                    #
 // #################################################################################################################
 
+void demo() {
+  // Function flashes RGB through all pixels. Just to confirm that the LED matrix is working.
+  leds_clear_matrix(); // Clear the LED matrix before starting
+  for (pixel_index = 0; pixel_index < PIXEL_ARRAY_SIZE; pixel_index++) {
+    // Set each pixel to a different color
+    pixel_data[pixel_index] = 0xF0; // Set upper bits to 15
+    leds_show(); // Show the update
+    delay(25);
+    pixel_data[pixel_index] = 0x0F; // Set lower bits to 15
+    leds_show(); // Show the update
+    delay(25);
+    pixel_data[pixel_index] = 0x00; // Reset pixel to 0
+  }
+  leds_clear_matrix(); // Clear the LED matrix after the demo
+}
+
 // Global variables for storing the current state of the NFC tag and LED matrix
 uint16_t num_frames = 0; // Variable to remember number of frames are stored in the NFC tag
 byte color_mode = 0; // Only lowest 3 bits used for color mode. 0 = GRB444, rest from 001 to 111 are corresponding to GRB channel max brightness (e.g. 001 = B, 011 = R+B, 111 = R+G+B)
@@ -341,6 +328,9 @@ bool initialize() {
   Clears the pixel data buffer
   Returns true if initialization was successful, false otherwise.
   */
+
+  // TODO: This is a temp test code to check if the LED is working. 
+  demo(); // Run the demo to check if the LED matrix is working
 
   current_nfc_address = NFC_FIRST_ADDRESS;
 
