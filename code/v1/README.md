@@ -121,7 +121,7 @@ The code proceeds as follows:
   - Repeat 2-4 until all frames from `NNNN_NNNN` have been displayed.
   - Repeat step 1. 
 
-During this time, if any error occurs (most likely NFC I2C read error), the code will flash a full-red screen with no delay, and then repeat the current frame / initialization process. 
+During this time, if any error occurs (most likely NFC I2C read error), the code will flash a full-red screen with no delay. The program restarts from initialization. This is done to prevent address overflowing / wrapping on an uninitialized NFC memory. 
 
 ## Function / Variable / Define Documentation
 Note: all pins are using the default clockwise pin numbering from `ATTinyCore`. 

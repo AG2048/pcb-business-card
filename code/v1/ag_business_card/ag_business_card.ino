@@ -587,8 +587,8 @@ void loop() {
   // If there are frames to display, start the display loop
   while (num_frames) {
     if (!load_and_display_frame()) {
-      // If loading the frame failed, repeat this until it either succeeds or user debugs the issue.
-      continue;
+      // If loading and displaying failed, break out of the loop and restart. 
+      break;
     }
   }
 }
