@@ -163,3 +163,7 @@ Pointer to the port output register for the LED pin. This is used in assembly co
 The bit mask for the LED output pin. This is used to set `hi` and `lo` values to set the output pin high or low in the assembly code.
 
 WIP, TODO. 
+
+## Generate NFC Binary
+The `generate_nfc_binary.py` script is used to generate the binary file that can be written to the NFC tag to be displayed.
+It takes a list of images or GIFs, and associated colour and timing data, and generates a hex binary file for the NFC tag.
