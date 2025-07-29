@@ -35,7 +35,6 @@ byte pixel_data[PIXEL_ARRAY_SIZE]; // GRB444 data format, 1.5 bytes per pixel (4
 
 // Variables for LED display (from the tinyNeoPixel_Static library)
 uint32_t endTime = 0;
-int8_t pin = LED_PIN;
 uint8_t p = LED_PIN;
 volatile uint8_t *port;
 uint8_t pinMask;
