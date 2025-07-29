@@ -21,6 +21,7 @@
 // NFC memory configuration
 #define NFC_FIRST_ADDRESS 32 // The first address to read from the NFC tag, previous addresses are reserved for enabling url tap
 #define NFC_MAX_POSSIBLE_FRAMES 627 // Max number of frames that can be stored on NFC tag
+#define NFC_MAX_MEMORY_ADDRESS 8191 // Maximum address for ST25DV64K with 8kB of memory
 
 // #################################################################################################################
 // #                                      LED MATRIX FUNCTIONS                                                     #
@@ -270,6 +271,7 @@ bool nfc_read_data(int address, int length) {
   Returns:
     - true if data was read successfully, false otherwise.
   */
+  if (length <= 0 || address + length > NFC_MAX_MEMORY_ADDRESS) return false; // Check if length is valid and does not exceed maximum address
 
   Wire.beginTransmission(NFC_I2C_ADDRESS); // Open I2C session with a write operation
   nfc_address_upper_byte = (address >> 8) & 0xFF; // Get upper byte of address
