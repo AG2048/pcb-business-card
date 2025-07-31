@@ -431,15 +431,10 @@ bool display_frame_grb444() {
     return false; // Failed to read pixel data from NFC tag
   }
   current_nfc_address += PIXEL_ARRAY_SIZE; // Move to the next address for the next frame configuration
-  if (handle_transition()) {
-    // Transition is handled correctly. Just wait for the frame duration
-    delay(frame_duration); // Wait for the frame duration before transitioning to the next frame
-    return true; // Frame displayed successfully
-  } else {
-    // Transition failed, rollback the address to the current frame configuration
-    current_nfc_address -= PIXEL_ARRAY_SIZE; // Rollback to the current frame configuration
-    return false; // Failed to handle transition
-  }
+
+  handle_transition();
+  delay(frame_duration); // Wait for the frame duration before transitioning to the next frame
+  return true; // Frame displayed successfully
 }
 
 byte solid_color_r = 0; // Red channel value for solid color frame
@@ -486,21 +481,15 @@ bool display_frame_solid_color() {
     }
   }
 
-  if (handle_transition()) {
-    // Transition is handled correctly. Just wait for the frame duration
-    delay(frame_duration); // Wait for the frame duration before transitioning to the next frame
-    return true; // Frame displayed successfully
-  } else {
-    // Transition failed, rollback the address to the current frame configuration
-    current_nfc_address -= NUM_PIXELS_IN_BYTES; // Rollback to the current frame configuration
-    return false; // Failed to handle transition
-  }
+  handle_transition();
+  delay(frame_duration); // Wait for the frame duration before transitioning to the next frame
+  return true; // Frame displayed successfully
 }
 
 byte original_pixel_data[PIXEL_ARRAY_SIZE]; // Buffer to store the original pixel data for transition handling
 unsigned long elapsed;
 int8_t transition_r, transition_g, transition_b; // Variables to store the transition values for each channel
-bool handle_transition() {
+void handle_transition() {
   /*
   This function handles the transition between frames.
   It updates the pixel data based on the transition_time and the difference between the current frame in pixel_data and the next frame in nfc_data.
@@ -509,7 +498,7 @@ bool handle_transition() {
   // If transition time is 0, directly memcpy and return true
   if (transition_time == 0) {
     memcpy(pixel_data, nfc_data, PIXEL_ARRAY_SIZE);
-    return true;
+    return;
   }
 
   // We can make a 3rd buffer array to store the original frame's data. Then every 16 ms, we calculate what the next pixel data should be. In the end, we copy the pixel_data to the nfc_data buffer.
@@ -587,7 +576,6 @@ bool handle_transition() {
   // In the end, always copy from nfc_data to pixel_data to ensure the frame is correctly displayed
   memcpy(pixel_data, nfc_data, PIXEL_ARRAY_SIZE);
   leds_show(); // Show the final frame
-  return true;
 }
 
 // #################################################################################################################
