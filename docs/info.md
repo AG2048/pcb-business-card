@@ -85,3 +85,11 @@ After reading the blog, I went to the WPC (Wireless Power Consortium) website to
 ## Qi and NFC Test Board
 
 ## V1 Board
+
+### Code Development
+- Made simple LED demo -- too bright... reduced brightness to 1/16
+- This also saved memory, but didn't do anything about it just yet.
+- Tested it with NFC tag, it can read some bytes from NFC tag and recognize it as bit pattern for LED matrix and display it.
+- Then modified the code to read structured data from NFC tag that can display a "gif" / fade in, fade out, long duration... etc
+- Modified the LED display code, to automatically write zeros to upper 4 bits of each pixel channel. Modified assembly since directly adding 4 zero writes is too long for the assembly to rjmp. 
+- Realized default, I made the NFC tag read too much data at once, now reducing to only read 30 bytes at a time. (limited by size of buffer in Wire.h library for ATTinyCore) 
