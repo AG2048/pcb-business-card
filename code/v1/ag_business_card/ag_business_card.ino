@@ -255,12 +255,16 @@ void leds_fill_solid_red() {
 // #                                             NFC FUNCTIONS                                                     #
 // #################################################################################################################
 
-int NFC_I2C_ADDRESS = 0b1010011; // ST25DV64K NFC tag I2C address
+const int NFC_I2C_ADDRESS = 0b1010011; // ST25DV64K NFC tag I2C address
+#define NFC_MAX_MEMORY_READ_LENGTH 32 // Maximum number of bytes that can be read from the NFC tag in one go
+#define NFC_DATA_BUFFER_SIZE 128 // Size of the buffer to store NFC data, should be enough for most frames
 
-byte nfc_data[128]; // Buffer for NFC data
+byte nfc_data[NFC_DATA_BUFFER_SIZE]; // Buffer for NFC data
 byte nfc_address_upper_byte; // Upper byte of the NFC memory address
 byte nfc_address_lower_byte; // Lower byte of the NFC memory address
 int nfc_index; // Iterator for NFC data
+int nfc_length_remaining;
+int nfc_read_counter;
 
 bool nfc_read_data(int address, int length) {
   /*
@@ -271,7 +275,7 @@ bool nfc_read_data(int address, int length) {
   Returns:
     - true if data was read successfully, false otherwise.
   */
-  if (length <= 0 || address + length > NFC_MAX_MEMORY_ADDRESS) return false; // Check if length is valid and does not exceed maximum address
+  if (length <= 0 || address + length > NFC_MAX_MEMORY_ADDRESS || length > NFC_DATA_BUFFER_SIZE) return false; // Check if length is valid and does not exceed maximum address
 
   Wire.beginTransmission(NFC_I2C_ADDRESS); // Open I2C session with a write operation
   nfc_address_upper_byte = (address >> 8) & 0xFF; // Get upper byte of address
@@ -280,14 +284,30 @@ bool nfc_read_data(int address, int length) {
   Wire.write(nfc_address_lower_byte); // Write lower address byte
   if (Wire.endTransmission(false)) return false; // Do not release the bus, send RESTART condition. Return false if transmission failed (return value != 0)
 
-  Wire.requestFrom(NFC_I2C_ADDRESS, length); // Request data from NFC tag in read mode
-  if (Wire.available() == length) {
-    for (nfc_index = 0; nfc_index < length; nfc_index++) {
-      nfc_data[nfc_index] = Wire.read(); // Read data into buffer
+  nfc_index = 0; // Reset the index for reading data
+  nfc_length_remaining = length; // Set the remaining length to read
+  while (nfc_length_remaining > NFC_MAX_MEMORY_READ_LENGTH) {
+    // We have to read NFC_MAX_MEMORY_READ_LENGTH bytes at a time
+    Wire.requestFrom(NFC_I2C_ADDRESS, NFC_MAX_MEMORY_READ_LENGTH); // Request data from NFC tag
+    if (Wire.available() == NFC_MAX_MEMORY_READ_LENGTH) {
+      for (nfc_read_counter = 0; nfc_read_counter < NFC_MAX_MEMORY_READ_LENGTH; nfc_read_counter++) {
+        nfc_data[nfc_index++] = Wire.read(); // Read data into buffer
+      }
+      nfc_length_remaining -= NFC_MAX_MEMORY_READ_LENGTH; // Decrease the remaining length
+    } else {
+      return false; // Failed to read data
+    }
+  }
+  // We can read the remaining data in one go
+  Wire.requestFrom(NFC_I2C_ADDRESS, nfc_length_remaining); // Request remaining data from NFC tag
+  if (Wire.available() == nfc_length_remaining) {
+    for (nfc_read_counter = 0; nfc_read_counter < nfc_length_remaining; nfc_read_counter++) {
+      nfc_data[nfc_index++] = Wire.read(); // Read data into buffer
     }
     return true; // Data read successfully
+  } else {
+    return false; // Failed to read data
   }
-  return false; // Failed to read data
 }
 
 // #################################################################################################################
