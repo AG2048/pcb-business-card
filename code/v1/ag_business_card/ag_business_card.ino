@@ -495,7 +495,7 @@ void handle_transition() {
   /*
   This function handles the transition between frames.
   It updates the pixel data based on the transition_time and the difference between the current frame in pixel_data and the next frame in nfc_data.
-  Returns true if the transition was handled successfully, false otherwise.
+  Always assume it is successful, since it doesn't use NFC. 
   */
   // If transition time is 0, directly memcpy and return true
   if (transition_time == 0) {
