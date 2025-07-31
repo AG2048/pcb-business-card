@@ -361,6 +361,7 @@ bool initialize() {
 
   if (!nfc_read_data(current_nfc_address, 4)) {
     leds_fill_solid_red(); // Fill the LED matrix with solid red color to indicate error
+    delay(500); // Wait for 500ms to indicate error
     return false; // Failed to read data from NFC tag
   }
 
@@ -384,6 +385,7 @@ bool load_and_display_frame() {
   // Load the 4-byte frame configuration from the NFC tag
   if (!nfc_read_data(current_nfc_address, 4)) {
     leds_fill_solid_red(); // Fill the LED matrix with solid red color to indicate error
+    delay(500); // Wait for 500ms to indicate error
     return false; // Failed to read frame data from NFC tag
   }
 
@@ -400,6 +402,7 @@ bool load_and_display_frame() {
     if (!display_frame_grb444()) {
       current_nfc_address -= 4; // Rollback the address to the current frame configuration
       leds_fill_solid_red(); // Fill the LED matrix with solid red color to indicate error
+      delay(500); // Wait for 500ms to indicate error
       return false; // Failed to display frame
     }
   } else {
@@ -407,6 +410,7 @@ bool load_and_display_frame() {
     if (!display_frame_solid_color()) {
       current_nfc_address -= 4; // Rollback the address to the current frame configuration
       leds_fill_solid_red(); // Fill the LED matrix with solid red color to indicate error
+      delay(500); // Wait for 500ms to indicate error
       return false; // Failed to display frame
     }
   }
