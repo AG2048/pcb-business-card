@@ -256,8 +256,8 @@ void leds_fill_solid_red() {
 // #################################################################################################################
 
 const int NFC_I2C_ADDRESS = 0b1010011; // ST25DV64K NFC tag I2C address
-#define NFC_MAX_MEMORY_READ_LENGTH 32 // Maximum number of bytes that can be read from the NFC tag in one go
-#define NFC_DATA_BUFFER_SIZE 128 // Size of the buffer to store NFC data, should be enough for most frames
+#define NFC_MAX_MEMORY_READ_LENGTH 30 // Maximum number of bytes that can be read from the NFC tag in one go
+#define NFC_DATA_BUFFER_SIZE PIXEL_ARRAY_SIZE // Size of the buffer to store NFC data, should be enough for most frames
 
 byte nfc_data[NFC_DATA_BUFFER_SIZE]; // Buffer for NFC data
 byte nfc_address_upper_byte; // Upper byte of the NFC memory address
