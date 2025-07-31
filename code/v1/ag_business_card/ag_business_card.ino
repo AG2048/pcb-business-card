@@ -371,6 +371,8 @@ bool initialize() {
   current_nfc_address += 4; // Move to the next address for reading frame data
 
   delay(initial_delay); // Wait for the initial delay before starting to display frames
+
+  return true; // Initialization successful
 }
 
 bool load_and_display_frame() {
