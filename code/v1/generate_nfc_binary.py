@@ -194,7 +194,7 @@ def process_image_file(file_path, show_preview=True):
         return []
 
 
-def generate_hex_file(frame_data, initial_delay, output_path):
+def generate_bin_file(frame_data, initial_delay, output_path):
     """
     Generate the hex file, with header 4 bytes, and additional 4 bytes per frame.
     """
@@ -214,7 +214,7 @@ def generate_hex_file(frame_data, initial_delay, output_path):
     output_data.append([((frame_colour_mode & 0b111) << 5) | (frame_transition_delay >> 8), frame_transition_delay & 0xFF, (frame_duration >> 8) & 0xFF, frame_duration & 0xFF])
     output_data.append(frame)
     
-    # Write to .hex file
+    # Write to .bin file
     with open(output_path, 'wb') as f:
         for data in output_data:
             if isinstance(data, bytearray):
@@ -224,15 +224,15 @@ def generate_hex_file(frame_data, initial_delay, output_path):
             else:
                 # convert data from int to bytes. Only take lower 8 bits
                 f.write(bytearray([data & 0xFF]))
-    print(f"Hex file generated: {output_path}")
+    print(f"Bin file generated: {output_path}")
 
 
-def print_hex_file(file_path, bytes_per_line=4):
+def print_bin_file(file_path, bytes_per_line=4):
     """
-    Print a hex file in formatted chunks.
+    Print a bin file in formatted chunks.
     
     Args:
-        file_path: Path to the .hex file
+        file_path: Path to the .bin file
         bytes_per_line: Number of bytes to display per line (default: 4)
     """
     try:
@@ -254,16 +254,16 @@ def print_hex_file(file_path, bytes_per_line=4):
             chunk = data[offset:offset + bytes_per_line]
             
             # Format hex values
-            hex_str = ' '.join(f'{byte:02X}' for byte in chunk)
+            bin_str = ' '.join(f'{byte:02X}' for byte in chunk)
             
             # Pad hex string to consistent width
-            hex_str = hex_str.ljust(bytes_per_line * 3 - 1)
+            bin_str = bin_str.ljust(bytes_per_line * 3 - 1)
             
             # Convert to ASCII (printable chars only)
             ascii_str = ''.join(chr(byte) if 32 <= byte <= 126 else '.' for byte in chunk)
             
             # Print the line
-            print(f"{offset:08X} | {hex_str} | {ascii_str}")
+            print(f"{offset:08X} | {bin_str} | {ascii_str}")
             
             offset += bytes_per_line
         
@@ -276,7 +276,7 @@ def print_hex_file(file_path, bytes_per_line=4):
         print(f"Error reading file '{file_path}': {e}")
 
 
-def analyze_nfc_hex_file(file_path):
+def analyze_nfc_bin_file(file_path):
     """
     Analyze and decode NFC hex file format according to your Arduino code structure.
     """
@@ -338,10 +338,10 @@ def analyze_nfc_hex_file(file_path):
             
             # Show first few bytes of frame data
             frame_data = data[offset:offset + min(16, frame_data_size)]
-            hex_preview = ' '.join(f'{byte:02X}' for byte in frame_data)
+            bin_preview = ' '.join(f'{byte:02X}' for byte in frame_data)
             if frame_data_size > 16:
-                hex_preview += " ..."
-            print(f"    Frame data preview: {hex_preview}")
+                bin_preview += " ..."
+            print(f"    Frame data preview: {bin_preview}")
             
             offset += frame_data_size
             frame_num += 1
@@ -358,7 +358,7 @@ def analyze_nfc_hex_file(file_path):
         print(f"Error analyzing file: {e}")
 
 
-def print_hex_continuous(file_path):
+def print_bin_continuous(file_path):
     """
     Print the entire hex file content as a continuous string of hex values.
     Format: FFAABB00ABC (no spaces, no line breaks)
@@ -376,10 +376,10 @@ def print_hex_continuous(file_path):
         print("Hex content:")
         
         # Convert all bytes to uppercase hex without spaces
-        hex_string = ''.join(f'{byte:02X}' for byte in data)
-        print(hex_string)
+        bin_string = ''.join(f'{byte:02X}' for byte in data)
+        print(bin_string)
         
-        print(f"\nTotal hex characters: {len(hex_string)}")
+        print(f"\nTotal hex characters: {len(bin_string)}")
         
     except FileNotFoundError:
         print(f"Error: File '{file_path}' not found")
@@ -424,16 +424,16 @@ if __name__ == "__main__":
         print(f"Processed {len(frame_data)} frame(s) from {image_path}")
         for i, frame in enumerate(frame_data):
             print(f"Frame {i}: {len(frame)} bytes")
-        # Generate hex file
-        output_path = "output.hex"
+        # Generate bin file
+        output_path = "output.bin"
         initial_delay = 500
-        generate_hex_file(frame_data, initial_delay, output_path)
-        
-        # Print and analyze the generated hex file
+        generate_bin_file(frame_data, initial_delay, output_path)
+
+        # Print and analyze the generated bin file
         print("\n" + "="*50)
-        print_hex_file(output_path, bytes_per_line=4)
+        print_bin_file(output_path, bytes_per_line=4)
         print("\n" + "="*50)
-        analyze_nfc_hex_file(output_path)
+        analyze_nfc_bin_file(output_path)
         print("\n" + "="*50)
-        print_hex_continuous(output_path) 
+        print_bin_continuous(output_path) 
     
