@@ -223,19 +223,19 @@ void leds_set_pixel_color_by_index(uint8_t index, uint8_t r, uint8_t g, uint8_t 
   // Index is from 0 to LED_COUNT - 1
   // The destination array can be pixel_data or any other byte array of size > PIXEL_ARRAY_SIZE
   if (index < LED_COUNT) {
-    pixel_index = index * 3 / 2; // Calculate the index in the pixel_data array
+    pixel_index = (index * 3) / 2; // Calculate the index in the pixel_data array
     if (index % 2 != 0) {
       // If the index is odd, then its first "G" channel is 2nd half of the first byte, and R/B channels are in the second byte
       dest_buffer[pixel_index] &= 0xF0; // Clear the lower 4 bits of the first byte (G channel)
       dest_buffer[pixel_index] |= (g & 0x0F); // Set the lower 4 bits to G channel value
-      dest_buffer[pixel_index + 1] = (r & 0x0F) << 4; // Set the upper 4 bits of the second byte to R channel value
+      dest_buffer[pixel_index + 1] = ((r & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the second byte to R channel value
       dest_buffer[pixel_index + 1] |= (b & 0x0F); // Set the lower 4 bits of the second byte to B channel value
     } else {
       // If the index is even, then G/R channels are in the first byte, and B channel is in the second byte
-      dest_buffer[pixel_index] = (g & 0x0F) << 4; // Set the upper 4 bits of the first byte to G channel value
+      dest_buffer[pixel_index] = ((g & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the first byte to G channel value
       dest_buffer[pixel_index] |= (r & 0x0F); // Set the lower 4 bits of the first byte to R channel value
       dest_buffer[pixel_index + 1] &= 0x0F; // Clear the upper 4 bits of the second byte (B channel)
-      dest_buffer[pixel_index + 1] |= (b & 0x0F) << 4; // Set the upper 4 bits of the second byte to B channel value
+      dest_buffer[pixel_index + 1] |= ((b & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the second byte to B channel value
     }
   }
 }
@@ -458,13 +458,13 @@ bool display_frame_solid_color() {
   solid_color_r = 0;
   solid_color_g = 0;
   solid_color_b = 0;
-  if (color_mode & 0b001) {
+  if (color_mode & 0b010) {
     solid_color_r = MAX_BRIGHTNESS;
   }
-  if (color_mode & 0b010) {
+  if (color_mode & 0b100) {
     solid_color_g = MAX_BRIGHTNESS;
   }
-  if (color_mode & 0b100) {
+  if (color_mode & 0b001) {
     solid_color_b = MAX_BRIGHTNESS;
   }
   // Move data to temp_pixel_data buffer
