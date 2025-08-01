@@ -224,7 +224,22 @@ def generate_bin_file(frame_data, initial_delay, output_path):
             else:
                 # convert data from int to bytes. Only take lower 8 bits
                 f.write(bytearray([data & 0xFF]))
+    
+    # Check file size and alert if too large for NFC tag
+    file_size = os.path.getsize(output_path)
+    max_nfc_size = 8192 - 32  # 8KB NFC tag minus 32 bytes reserved
+    
     print(f"Bin file generated: {output_path}")
+    print(f"File size: {file_size} bytes")
+    
+    if file_size > max_nfc_size:
+        print(f"⚠️  WARNING: File size ({file_size} bytes) exceeds NFC tag capacity!")
+        print(f"   Maximum allowed: {max_nfc_size} bytes (8192 - 32 reserved)")
+        print(f"   Excess: {file_size - max_nfc_size} bytes")
+        print(f"   Consider reducing frames or image complexity.")
+    else:
+        remaining_space = max_nfc_size - file_size
+        print(f"✓ File fits in NFC tag. Remaining space: {remaining_space} bytes")
 
 
 def print_bin_file(file_path, bytes_per_line=4):
@@ -243,7 +258,7 @@ def print_bin_file(file_path, bytes_per_line=4):
             print(f"File {file_path} is empty")
             return
         
-        print(f"=== Hex File: {file_path} ===")
+        print(f"=== Bin File: {file_path} ===")
         print(f"Total size: {len(data)} bytes")
         print("Offset   | Hex Values           | ASCII")
         print("-" * 45)
@@ -316,7 +331,18 @@ def analyze_nfc_bin_file(file_path):
             frame_duration = (data[offset + 2] << 8) | data[offset + 3]
             
             print(f"  Frame header (bytes {offset}-{offset+3}):")
-            print(f"    Color mode: {color_mode} ({'GRB444' if color_mode == 0 else 'Solid color'})")
+            # Print color mode with description
+            color_mode_desc = {
+              0b000: "GRB444",
+              0b001: "Solid Red",
+              0b010: "Solid Green",
+              0b011: "Solid Blue",
+              0b100: "Solid White",
+              0b101: "Solid Black",
+              0b110: "Solid Yellow",
+              0b111: "Reserved"
+            }.get(color_mode, "Unknown")
+            print(f"    Color mode: {color_mode:03b} ({color_mode_desc})")
             print(f"    Transition time: {transition_time} ms")
             print(f"    Frame duration: {frame_duration} ms")
             
