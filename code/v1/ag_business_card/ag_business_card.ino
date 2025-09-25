@@ -352,8 +352,7 @@ bool initialize() {
   Returns true if initialization was successful, false otherwise.
   */
 
-  // TODO: This is a temp test code to check if the LED is working. 
-  demo(); // Run the demo to check if the LED matrix is working
+  // demo(); // Run the demo to check if the LED matrix is working
 
   current_nfc_address = NFC_FIRST_ADDRESS;
 
