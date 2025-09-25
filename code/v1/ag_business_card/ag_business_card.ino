@@ -358,8 +358,6 @@ bool initialize() {
 
   leds_clear_matrix(); // Clear the LED matrix before starting
 
-  delay(500); // Wait for NFC tag to power up
-
   if (!nfc_read_data(current_nfc_address, 4)) {
     leds_fill_solid_red(); // Fill the LED matrix with solid red color to indicate error
     delay(500); // Wait for 500ms to indicate error
@@ -589,6 +587,8 @@ void handle_transition() {
 void setup() {
   // Configure LED pin to output, needs to be done manually for tinyNeoPixel_Static
   pinMode(LED_PIN, OUTPUT);
+
+  delay(500); // Wait for NFC tag to power up
 
   // Configure I2C for NFC
   Wire.begin();
