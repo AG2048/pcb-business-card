@@ -323,10 +323,10 @@ void demo() {
     // Set each pixel to a different color
     pixel_data[pixel_index] = 0xF0; // Set upper bits to 15
     leds_show(); // Show the update
-    delay(25);
+    delay(5);
     pixel_data[pixel_index] = 0x0F; // Set lower bits to 15
     leds_show(); // Show the update
-    delay(25);
+    delay(5);
     pixel_data[pixel_index] = 0x00; // Reset pixel to 0
   }
   leds_clear_matrix(); // Clear the LED matrix after the demo
