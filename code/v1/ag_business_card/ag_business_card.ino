@@ -184,11 +184,12 @@ void leds_show() {
 
 // LED Utility Functions
 uint8_t pixel_index;
+uint8_t pixel_setter_pixel_index;
 void leds_clear_matrix() {
   // Clear the LED matrix by setting all pixel data to zero, and show the update
   // This turns off all LEDs
-  for (pixel_index = 0; pixel_index < PIXEL_ARRAY_SIZE; pixel_index++) {
-    pixel_data[pixel_index] = 0; // Set all RGB values to 0
+  for (pixel_setter_pixel_index = 0; pixel_setter_pixel_index < PIXEL_ARRAY_SIZE; pixel_setter_pixel_index++) {
+    pixel_data[pixel_setter_pixel_index] = 0; // Set all RGB values to 0
   }
   leds_show(); // Update the LED matrix to reflect the changes
 }
@@ -199,53 +200,54 @@ void leds_set_pixel_color_by_coordinate(uint8_t x, uint8_t y, uint8_t r, uint8_t
   // The LED matrix is ordered in a zigzag pattern: left-to-right on even rows, right-to-left on odd rows
   // The destination array can be pixel_data or any other byte array of size > PIXEL_ARRAY_SIZE
   if (x < LED_COLS && y < LED_ROWS) {
-    pixel_index = (y * LED_COLS + (y % 2 == 0 ? x : (LED_COLS - 1 - x))); // Calculate the index of the pixel's location
-    if (pixel_index % 2 != 0) {
+    pixel_setter_pixel_index = (y * LED_COLS + (y % 2 == 0 ? x : (LED_COLS - 1 - x))); // Calculate the index of the pixel's location
+    if (pixel_setter_pixel_index % 2 != 0) {
       // If the pixel index is odd, then its first "G" channel is 2nd half of the first byte, and R/B channels are in the second byte
-      pixel_index = pixel_index * 3 / 2;
-      pixel_data[pixel_index] &= 0xF0; // Clear the lower 4 bits of the first byte (G channel)
-      pixel_data[pixel_index] |= (g & 0x0F); // Set the lower 4 bits to G channel value
-      pixel_data[pixel_index + 1] = (r & 0x0F) << 4; // Set the upper 4 bits of the second byte to R channel value
-      pixel_data[pixel_index + 1] |= (b & 0x0F); // Set the lower 4 bits of the second byte to B channel value
+      pixel_setter_pixel_index = pixel_setter_pixel_index * 3 / 2;
+      pixel_data[pixel_setter_pixel_index] &= 0xF0; // Clear the lower 4 bits of the first byte (G channel)
+      pixel_data[pixel_setter_pixel_index] |= (g & 0x0F); // Set the lower 4 bits to G channel value
+      pixel_data[pixel_setter_pixel_index + 1] = (r & 0x0F) << 4; // Set the upper 4 bits of the second byte to R channel value
+      pixel_data[pixel_setter_pixel_index + 1] |= (b & 0x0F); // Set the lower 4 bits of the second byte to B channel value
     } else {
       // If the pixel index is even, then G/R channels are in the first byte, and B channel is in the second byte
-      pixel_index = pixel_index * 3 / 2;
-      pixel_data[pixel_index] = (g & 0x0F) << 4; // Set the upper 4 bits of the first byte to G channel value
-      pixel_data[pixel_index] |= (r & 0x0F); // Set the lower 4 bits of the first byte to R channel value
-      pixel_data[pixel_index + 1] &= 0x0F; // Clear the upper 4 bits of the second byte (B channel)
-      pixel_data[pixel_index + 1] |= (b & 0x0F) << 4; // Set the upper 4 bits of the second byte to B channel value
+      pixel_setter_pixel_index = pixel_setter_pixel_index * 3 / 2;
+      pixel_data[pixel_setter_pixel_index] = (g & 0x0F) << 4; // Set the upper 4 bits of the first byte to G channel value
+      pixel_data[pixel_setter_pixel_index] |= (r & 0x0F); // Set the lower 4 bits of the first byte to R channel value
+      pixel_data[pixel_setter_pixel_index + 1] &= 0x0F; // Clear the upper 4 bits of the second byte (B channel)
+      pixel_data[pixel_setter_pixel_index + 1] |= (b & 0x0F) << 4; // Set the upper 4 bits of the second byte to B channel value
     }
   }
 }
+
 
 void leds_set_pixel_color_by_index(uint8_t index, uint8_t r, uint8_t g, uint8_t b, byte *dest_buffer) {
   // Set the color of a pixel at the specified index
   // Index is from 0 to LED_COUNT - 1
   // The destination array can be pixel_data or any other byte array of size > PIXEL_ARRAY_SIZE
   if (index < LED_COUNT) {
-    pixel_index = (index * 3) / 2; // Calculate the index in the pixel_data array
+    pixel_setter_pixel_index = (index * 3) / 2; // Calculate the index in the pixel_data array
     if (index % 2 != 0) {
       // If the index is odd, then its first "G" channel is 2nd half of the first byte, and R/B channels are in the second byte
-      dest_buffer[pixel_index] &= 0xF0; // Clear the lower 4 bits of the first byte (G channel)
-      dest_buffer[pixel_index] |= (g & 0x0F); // Set the lower 4 bits to G channel value
-      dest_buffer[pixel_index + 1] = ((r & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the second byte to R channel value
-      dest_buffer[pixel_index + 1] |= (b & 0x0F); // Set the lower 4 bits of the second byte to B channel value
+      dest_buffer[pixel_setter_pixel_index] &= 0xF0; // Clear the lower 4 bits of the first byte (G channel)
+      dest_buffer[pixel_setter_pixel_index] |= (g & 0x0F); // Set the lower 4 bits to G channel value
+      dest_buffer[pixel_setter_pixel_index + 1] = ((r & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the second byte to R channel value
+      dest_buffer[pixel_setter_pixel_index + 1] |= (b & 0x0F); // Set the lower 4 bits of the second byte to B channel value
     } else {
       // If the index is even, then G/R channels are in the first byte, and B channel is in the second byte
-      dest_buffer[pixel_index] = ((g & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the first byte to G channel value
-      dest_buffer[pixel_index] |= (r & 0x0F); // Set the lower 4 bits of the first byte to R channel value
-      dest_buffer[pixel_index + 1] &= 0x0F; // Clear the upper 4 bits of the second byte (B channel)
-      dest_buffer[pixel_index + 1] |= ((b & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the second byte to B channel value
+      dest_buffer[pixel_setter_pixel_index] = ((g & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the first byte to G channel value
+      dest_buffer[pixel_setter_pixel_index] |= (r & 0x0F); // Set the lower 4 bits of the first byte to R channel value
+      dest_buffer[pixel_setter_pixel_index + 1] &= 0x0F; // Clear the upper 4 bits of the second byte (B channel)
+      dest_buffer[pixel_setter_pixel_index + 1] |= ((b & 0x0F) << 4) & 0xF0; // Set the upper 4 bits of the second byte to B channel value
     }
   }
 }
 
 void leds_fill_solid_red() {
   // Fill the entire LED matrix with solid red color. Always to the pixel_data array.
-  for (pixel_index = 0; pixel_index < PIXEL_ARRAY_SIZE; pixel_index += 3) {
-    pixel_data[pixel_index] = 0x0F; // Set G channel to 0, R channel to 15
-    pixel_data[pixel_index + 1] = 0x00; // Set B channel to 0
-    pixel_data[pixel_index + 2] = 0xF0; // Set R channel to 15, B channel to 0
+  for (pixel_setter_pixel_index = 0; pixel_setter_pixel_index < PIXEL_ARRAY_SIZE; pixel_setter_pixel_index += 3) {
+    pixel_data[pixel_setter_pixel_index] = 0x0F; // Set G channel to 0, R channel to 15
+    pixel_data[pixel_setter_pixel_index + 1] = 0x00; // Set B channel to 0
+    pixel_data[pixel_setter_pixel_index + 2] = 0xF0; // Set R channel to 15, B channel to 0
 
   }
   leds_show(); // Update the LED matrix to reflect the changes
@@ -500,6 +502,7 @@ void handle_transition() {
   // If transition time is 0, directly memcpy and return true
   if (transition_time == 0) {
     memcpy(pixel_data, nfc_data, PIXEL_ARRAY_SIZE);
+    leds_show(); // Show the LEDs, or else this frame will never be displayed
     return;
   }
 
